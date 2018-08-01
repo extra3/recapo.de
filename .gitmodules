@@ -1,9 +1,12 @@
 [submodule "library/Slim"]
 	path = library/Slim
-	url = git@github.com:lherich/Slim.git
+	url = https://github.com/lherich/Slim.git
 [submodule "library/Twig"]
 	path = library/Twig
-	url = git@github.com:lherich/Twig.git
+	url = https://github.com/lherich/Twig.git
 [submodule "library/Valitron"]
 	path = library/Valitron
-	url = git@github.com:lherich/Valitron.git
+	url = https://github.com/lherich/Valitron.git
+[submodule "library/Upload"]
+	path = library/Upload
+	url = https://github.com/lherich/Upload.git

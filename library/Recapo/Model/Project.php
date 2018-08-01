@@ -38,6 +38,12 @@ class Project
             project.instructionText = :pInstructionText, 
             project.tributeText = :pTributeText 
         WHERE project.ID = :pID AND project.userID = :pUserID',
+    'textSettingsUpdate' => '
+        UPDATE project 
+        SET 
+            project.textAlign = :pTextAlign, 
+            project.blurArticleText = :pBlurArticleText 
+        WHERE project.ID = :pID AND project.userID = :pUserID',
     'deleteProjectByID'   => '
         UPDATE project 
         SET project.flag = "private" 
@@ -114,6 +120,13 @@ class Project
         $sth = \Slim\Slim::getInstance()->container['db']->prepare(static::$_sql['textUpdate']);
 
         return $sth->execute(array('pUserID' => $pUserID, 'pID' => $pID, 'pWelcomeText' => $pWelcomeText, 'pInstructionText' => $pInstructionText, 'pTributeText' => $pTributeText));
+    }
+
+    public static function updateTextSettings($pUserID, $pID, $pTextAlign, $pBlurArticleText)
+    {
+        $sth = \Slim\Slim::getInstance()->container['db']->prepare(static::$_sql['textSettingsUpdate']);
+
+        return $sth->execute(array('pUserID' => $pUserID, 'pID' => $pID, 'pTextAlign' => $pTextAlign, 'pBlurArticleText' => $pBlurArticleText));
     }
 
     public static function deleteProjectByID($pID)

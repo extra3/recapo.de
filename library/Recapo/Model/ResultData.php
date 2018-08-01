@@ -19,11 +19,12 @@ class ResultData extends \Recapo\Model\Model
             INSERT INTO resultdata (resultTaskID, itemID, informationarchitectureID, projectID, datetime) 
             VALUES (:pResultTaskID, :pItemID, :pInformationarchitectureID, :pProjectID, NOW(6))',
         'selectResultDataByProjectID' => '
-            SELECT resultdata.*, item.name AS itemName 
+            SELECT resultdata.*, item.name AS itemName, image.name AS imageName 
             FROM resultdata 
             LEFT JOIN item ON(item.ID = resultdata.itemID) 
+            LEFT JOIN image ON(image.ID = -resultdata.itemID) 
             WHERE resultdata.projectID = :pProjectID 
-            ORDER BY resultdata.ID',
+            ORDER BY resultdata.ID;',
     );
 
     public static function insertResultData($pResultTaskID, $pItemID, $pInformationarchitectureID, $pProjectID)

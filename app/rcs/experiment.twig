@@ -1,0 +1,229 @@
+
+{% include 'hooter/rcs/header.twig' with {REQUIRECSS : 'custom_rcs'} %}
+{% include 'hooter/rcs/brand.twig' %}
+
+{# Determine which sections should be available #}
+{% if sections[1]|length > 0 %}
+  {% set header = true %}
+{% else %}
+  {% set header = false %}
+{% endif %}
+
+{% if sections[2]|length > 0 %}
+  {% set article = true %}
+{% else %}
+  {% set article = false %}
+{% endif %}
+
+{% if sections[3]|length > 0 %}
+  {% set asideLeft = true %}
+{% else %}
+  {% set asideLeft = false %}
+{% endif %}
+
+{% if sections[4]|length > 0 %}
+  {% set footer = true %}
+{% else %}
+  {% set footer = false %}
+{% endif %}
+
+{% if sections[5]|length > 0 %}
+  {% set asideRight = true %}
+{% else %}
+  {% set asideRight = false %}
+{% endif %}
+
+{# Determine width of aside and article #}
+{% if asideLeft and asideRight %}{# both sides #}
+  {% set asideWidth = 2 %}
+  {% set articleWidth = 6 %}
+  {% set articleOffset = 1 %}
+  {% set asideRightOffset = 1 %}
+{% elseif asideLeft %}{# only aside left #}
+  {% set asideWidth = 3 %}
+  {% set articleWidth = 8 %}
+  {% set articleOffset = 1 %}
+  {% set asideRightOffset = 0 %}
+{% elseif asideRight %}{# only aside right #}
+  {% set asideWidth = 3 %}
+  {% set articleWidth = 8 %}
+  {% set articleOffset = 0 %}
+  {% set asideRightOffset = 1 %}
+{% else %}{# no aside, only article #}
+  {% set asideWidth = 0 %}
+  {% set articleWidth = 12 %}
+  {% set articleOffset = 0 %}
+  {% set asideRightOffset = 0 %}
+{% endif %}
+
+{#informationID={{informationID}} kartenID={{kartenID}} irgendwas={{irgendwas}} {{currentNode.itemID}}#}
+
+{%if header%}
+<nav class="navbar navbar-default navbar-main" role="navigation">
+  <div class="container well">
+  {%if bannerFile != NULL%}
+    <a href="{{urlFor('/experiment',{PROJECTURL:project.url})}}">
+      <img src="/userbanner/{{bannerFile}}" width="100%">
+    </a>
+  {%endif%}
+
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-1">
+        <span class="sr-only">Navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+
+    </div>
+    
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <nav class="collapse navbar-collapse" id="navbar-collapse-1">
+      <ul class="nav nav-pills">
+      {%for item in sections[1] %}{# Header #}
+      {%if item.linkToInformationarchitectureID != NULL%}
+        <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.linkToInformationarchitectureID,ITEMID:item.linkToItemID}) }}">{{item.name}}</a></li>
+      {%else%}
+        <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.ID,ITEMID:item.ITEMID}) }}">{{item.name}}</a></li>
+      {%endif%}
+      {%endfor%}
+      </ul>
+    </nav><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</nav>
+{%endif%}
+
+
+
+<div class="container">
+  <div class="row clearfix">
+
+  {%if asideLeft%}
+    <div class="col-md-{{asideWidth}} well">
+      <ul class="nav nav-stacked nav-pills">
+      {%for item in sections[3] %}
+      {%if item.linkToInformationarchitectureID != NULL%}
+        <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.linkToInformationarchitectureID,ITEMID:item.linkToItemID}) }}">{{item.name}}</a></li>
+      {%else%}
+        <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.ID,ITEMID:item.ITEMID}) }}">{{item.name}}</a></li>
+      {%endif%}
+      {%endfor%}
+      </ul>
+    </div>
+  {%endif%}
+
+  {%if article%}
+    <div class="col-md-{{articleWidth}} col-md-offset-{{articleOffset}} well {%if project.blurArticleText %}blur-text{%endif%}"
+      {%if project.textAlign == "center" %}
+        style="text-align: center"
+      {%elseif project.textAlign == "right" %}
+        style="text-align: right"
+      {%elseif project.textAlign == "justify" %}
+        style="text-align: justify"
+      {%else%}
+        style="text-align: left"
+      {%endif%}
+    >
+    {% autoescape false %}
+      {{images}}
+      {{loremipsum}}
+    {% endautoescape %}
+    </div>
+  {%else%}{# no article #}
+    <div class="col-md-{{articleWidth}} col-md-offset-{{articleOffset}} {%if project.blurArticleText %}blur-text{%endif%}"></div>
+  {%endif%}
+
+  {%if asideRight%}
+    <div class="col-md-{{asideWidth}} col-md-offset-{{asideRightOffset}} well">
+      <ul class="nav nav-stacked nav-pills">
+        {%for item in sections[5] %}
+          {%if item.linkToInformationarchitectureID != NULL%}
+            <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.linkToInformationarchitectureID,ITEMID:item.linkToItemID}) }}">{{item.name}}</a></li>
+          {%else%}
+            <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.ID,ITEMID:item.ITEMID}) }}">{{item.name}}</a></li>
+          {%endif%}
+        {%endfor%}
+      </ul>
+    </div>
+  {%endif%}
+
+  </div>
+</div>
+
+{%if footer%}
+<div class="container well">
+  <div class="row">
+    <div class="col-md-1">&nbsp;</div>
+
+    {% for i in 1..5 %}
+      {%if i <= sections[4]|length % 5%}{% set j = sections[4]|length // 5 + 1%}{%else%}{% set j = sections[4]|length // 5 %}{%endif%}
+      {%if  ((i-1)*j)!=(i*j) %}
+      <div class="col-md-2">
+        <ul class="nav nav-pills nav-stacked">
+        {%for k in ((i-1)*j)..(i*j) %}
+          {%if k<(i*j)%}
+            {% set item = sections[4][k] %}
+            {%if item.linkToInformationarchitectureID != NULL%}
+              <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.linkToInformationarchitectureID,ITEMID:item.linkToItemID}) }}">{{item.name}}</a></li>
+            {%else%}
+              <li><a href="{{ urlFor('/experiment', {PROJECTURL:project.url,ID:item.ID,ITEMID:item.ITEMID}) }}">{{item.name}}</a></li>
+            {%endif%}
+          {%endif%}
+        {%endfor%}
+        </ul>
+      </div>
+      {%endif%}
+    {% endfor %}
+
+    <div class="col-md-1">&nbsp;</div>
+  </div>
+</div>
+{%endif%}
+
+{%if sections[1]|length+sections[2]|length+sections[3]|length+sections[4]|length < 1%}
+<div class="container well">
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2"><br />
+      <h2>{{currentNode.name}}</h2>
+      Diese Seite hat keine weiteren Unterseiten mehr.<br /><br /><br />
+      <div class="btn-group">
+       <a href="{{urlFor('/endtask', {PROJECTURL:project.url,ID:currentNode.ID,ITEMID:currentNode.itemID}) }}" class="btn btn-success"><span class="glyphicon glyphicon-ok-sign"></span> Die gesuchte Information sollte hier zu finden sein</a> 
+       {% set currentNodeParentsLength = currentNodeParents|length - 1 %}
+        {%if currentNodeParentsLength >= 0%}
+        <a href="{{urlFor('/experiment', {PROJECTURL:project.url,ID:currentNodeParents[currentNodeParentsLength].ID,ITEMID:currentNodeParents[currentNodeParentsLength].itemID})}}" class="btn btn-default text-info"><span class="glyphicon glyphicon-arrow-up"></span> Ebene höher</a>
+        {%else%}
+        <a href="{{urlFor('/experiment',{PROJECTURL:project.url})}}" class="btn btn-default text-info"><span class="glyphicon glyphicon-arrow-up"></span> Ebene höher</a>
+        {%endif%}
+        <a href="{{urlFor('/skiptask', {PROJECTURL:project.url}) }}" class="btn btn-default text-warning"><span class="glyphicon glyphicon-share-alt"></span> Aufgabe überspringen</a>
+      </div>
+    </div>
+  </div>
+</div>
+{%endif%}
+
+
+
+{%if showTask%}
+<!-- Modal -->
+<div class="modal fade in" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        Aufgabenbeschreibung
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h2><span class="glyphicon glyphicon-info-sign"></span> {{currentTask.task}}</h2>
+      </div>
+      <div class="modal-footer">
+        <a href="{{urlFor('/skiptask', {PROJECTURL:project.url,ID:item.ID}) }}" class="pull-left btn btn btn-warning"><span class="glyphicon glyphicon-share-alt"></span> Überspringe Aufgabe</a>
+        <a href="{{urlFor('/experiment', {PROJECTURL:project.url}) }}" class="pull-rightbtn btn-lg btn-success"><span class="glyphicon glyphicon-ok-sign"></span> Starte Aufgabe</a>
+      </div>
+    </div>
+  </div>
+</div>
+{%endif%}
+
+
+{% include 'hooter/rcs/footer.twig' with {REQUIREJS : urlFor('/js/rcs/experiment')} %}

@@ -21,21 +21,31 @@ class Informationarchitecture extends \Recapo\Model\Model
         'selectItemByID2' => '
             SELECT
                 informationarchitecture.*,
-                IF(informationarchitecture.flag = "container", container.name, item.name) AS title,
-                IF(informationarchitecture.flag = "container", container.name, item.name) AS name
+                IF(informationarchitecture.flag = "container", container.name,
+                  IF(informationarchitecture.flag = "image", image.name, item.name)
+                ) AS title,
+                IF(informationarchitecture.flag = "container", container.name,
+                  IF(informationarchitecture.flag = "image", image.name, item.name)
+                ) AS name
             FROM informationarchitecture
             LEFT JOIN container ON (container.ID = informationarchitecture.containerID)
             LEFT JOIN item ON (item.ID = informationarchitecture.itemID)
+            LEFT JOIN image ON (image.ID = informationarchitecture.imageID)
             WHERE informationarchitecture.ID = :pID
             LIMIT 1',
         'selectItemByID' => '
             SELECT
                 informationarchitecture.*,
-                IF(informationarchitecture.flag = "container", container.name, item.name) AS title,
-                IF(informationarchitecture.flag = "container", container.name, item.name) AS name
+                IF(informationarchitecture.flag = "container", container.name,
+                  IF(informationarchitecture.flag = "image", image.name, item.name)
+                ) AS title,
+                IF(informationarchitecture.flag = "container", container.name,
+                  IF(informationarchitecture.flag = "image", image.name, item.name)
+                ) AS name
             FROM informationarchitecture
             LEFT JOIN container ON (container.ID = informationarchitecture.containerID)
             LEFT JOIN item ON (item.ID = informationarchitecture.itemID)
+            LEFT JOIN image ON (image.ID = informationarchitecture.imageID)
             WHERE informationarchitecture.ID = :pID AND informationarchitecture.projectID = :pProjectID
             LIMIT 1',
         'selectItemByProjectID' => '
@@ -94,11 +104,16 @@ class Informationarchitecture extends \Recapo\Model\Model
         'selectParentByItemID' => '
             SELECT
                 parent.*,
-                IF(parent.flag = "container", container.name, item.name) AS title,
-                IF(parent.flag = "container", container.name, item.name) AS name
+                IF(parent.flag = "container", container.name,
+                  IF(parent.flag = "image", image.name, item.name)
+                ) AS title,
+                IF(parent.flag = "container", container.name,
+                  IF(parent.flag = "image", image.name, item.name)
+                ) AS name
             FROM informationarchitecture AS parent
             LEFT JOIN container ON (container.ID = parent.containerID)
-            LEFT JOIN item ON (item.ID = parent.itemID),
+            LEFT JOIN item ON (item.ID = parent.itemID)
+            LEFT JOIN image ON (image.ID = parent.imageID),
             (SELECT * FROM informationarchitecture WHERE informationarchitecture.ID = :pID LIMIT 1) AS node
             WHERE
                 (parent.LFT < node.LFT)
@@ -106,8 +121,8 @@ class Informationarchitecture extends \Recapo\Model\Model
                 AND (node.RGT < parent.RGT)
                 AND (parent.flag != "root")',
         'insertItemByProjectID' => '
-            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, projectID, sectionID, flag)
-            VALUES (:LFT, :RGT, :pItemID, :pContainerID, :pProjectID, :pSectionID, :pFlag)',
+            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, imageID, projectID, sectionID, flag)
+            VALUES (:LFT, :RGT, :pItemID, :pContainerID, :pImageID, :pProjectID, :pSectionID, :pFlag)',
         'issetItemByID' => '
             SELECT informationarchitecture.ID
             FROM informationarchitecture
@@ -147,8 +162,8 @@ class Informationarchitecture extends \Recapo\Model\Model
             WHERE ia.projectID = :pProjectID AND ia.RGT >= :pLFT',
 
         'insertItemByLFT' => '
-            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, projectID, sectionID, flag)
-            VALUES (:pLFT, :pRGT, :pItemID, :pContainerID, :pProjectID, :pSectionID, :pFlag)',
+            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, imageID, projectID, sectionID, flag)
+            VALUES (:pLFT, :pRGT, :pItemID, :pContainerID, :pImageID, :pProjectID, :pSectionID, :pFlag)',
 
         'prepareInsertItemByParentID' => '
             UPDATE informationarchitecture AS ia
@@ -165,11 +180,11 @@ class Informationarchitecture extends \Recapo\Model\Model
               AND ia.RGT >= iaParent.RGT',
 
         'insertItemByParentID' => '
-            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, projectID, sectionID, flag)
+            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, imageID, projectID, sectionID, flag)
             (
                 SELECT
                     RGT-2 AS LFT, RGT-1 AS RGT, :pItemID AS itemID, :pContainerID AS containerID,
-                    :pProjectID AS projectID, :pSectionID AS sectionID, :pFlag  AS flag
+                    :pImageID AS imageID, :pProjectID AS projectID, :pSectionID AS sectionID, :pFlag  AS flag
                 FROM informationarchitecture
                 WHERE informationarchitecture.ID = :pParentID AND informationarchitecture.projectID = :pProjectID
             )',
@@ -186,7 +201,7 @@ class Informationarchitecture extends \Recapo\Model\Model
             WHERE iaParent.ID = :pParentID AND ia.projectID = :pProjectID AND ia.RGT >= iaParent.RGT',
 
         'insertItemByParentContainerID' => '
-            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, projectID, sectionID, flag)
+            INSERT INTO informationarchitecture (LFT, RGT, itemID, containerID, imageID, projectID, sectionID, flag)
             (
                 SELECT RGT-2 AS LFT, RGT-1 AS RGT, :pItemID AS itemID, :pContainerID AS containerID, :pProjectID AS projectID, :pSectionID AS sectionID, :pFlag  AS flag
                 FROM informationarchitecture
@@ -200,17 +215,22 @@ class Informationarchitecture extends \Recapo\Model\Model
                 informationarchitecture.RGT,
                 informationarchitecture.LFT,
                 informationarchitecture.ID AS "key",
-                IF(informationarchitecture.flag = "container", container.name, IF(item.flag = "link", CONCAT(item.name, " <i class=\"glyphicon glyphicon-link\"></i>"), item.name)) AS title,
+                IF(informationarchitecture.flag = "container", container.name,
+                  IF(item.flag = "link", CONCAT(item.name, " <i class=\"glyphicon glyphicon-link\"></i>"),
+                    IF(informationarchitecture.flag = "image", CONCAT(image.name, " <i class=\"glyphicon glyphicon-picture\"></i>"), item.name))
+                ) AS title,
                 informationarchitecture.flag AS flag,
                 informationarchitecture.sectionID AS sectionID,
                 informationarchitecture.itemID AS itemID,
-                informationarchitecture.containerID AS containerID
+                informationarchitecture.containerID AS containerID,
+                informationarchitecture.imageID AS imageID
             FROM informationarchitecture
             LEFT JOIN container ON (container.ID = informationarchitecture.containerID)
             LEFT JOIN item ON (item.ID = informationarchitecture.itemID)
+            LEFT JOIN image ON (image.ID = informationarchitecture.imageID)
             WHERE
                 informationarchitecture.projectID = :pProjectID AND informationarchitecture.flag != "root"
-                AND (item.ID IS NOT NULL OR container.name IS NOT NULL)
+                AND (item.ID IS NOT NULL OR container.name IS NOT NULL OR image.name IS NOT NULL)
             ORDER BY informationarchitecture.LFT, informationarchitecture.sectionID',
 
         'selectNestedSetByProjectID' => '
@@ -219,18 +239,22 @@ class Informationarchitecture extends \Recapo\Model\Model
                 informationarchitecture.RGT,
                 informationarchitecture.LFT,
                 informationarchitecture.ID AS "key",
-                IF(informationarchitecture.flag = "container", container.name, item.name) AS title,
+                IF(informationarchitecture.flag = "container", container.name,
+                  IF(informationarchitecture.flag = "image", image.name, item.name)
+                ) AS title,
                 informationarchitecture.flag AS flag,
                 informationarchitecture.sectionID AS sectionID,
                 informationarchitecture.itemID AS itemID,
                 informationarchitecture.containerID AS containerID,
+                informationarchitecture.imageID AS imageID,
               	informationarchitecture.linkToInformationarchitectureID AS linkToInformationarchitectureID,
               	informationarchitecture.linkToItemID AS linkToItemID
             FROM informationarchitecture
             LEFT JOIN container ON (container.ID = informationarchitecture.containerID)
             LEFT JOIN item ON (item.ID = informationarchitecture.itemID)
+            LEFT JOIN image ON (item.ID = informationarchitecture.imageID)
             WHERE informationarchitecture.projectID = :pProjectID AND informationarchitecture.flag != "root"
-                AND (item.ID IS NOT NULL OR container.name IS NOT NULL)
+                AND (item.ID IS NOT NULL OR container.name IS NOT NULL OR image.name IS NOT NULL)
             ORDER BY informationarchitecture.LFT, informationarchitecture.sectionID',
 
         'selectNestedSetByActiveSectionAndProjectID' => '
@@ -239,19 +263,26 @@ class Informationarchitecture extends \Recapo\Model\Model
                 informationarchitecture.RGT,
                 informationarchitecture.LFT,
                 informationarchitecture.ID AS "key",
-                IF(informationarchitecture.flag = "container", container.name, item.name) AS title,
+                IF(informationarchitecture.flag = "container", container.name,
+                 IF(informationarchitecture.flag = "image", image.name, item.name)
+                ) AS title,
                 informationarchitecture.flag AS flag,
                 informationarchitecture.sectionID AS sectionID,
                 informationarchitecture.itemID AS itemID,
                 informationarchitecture.containerID AS containerID,
+                informationarchitecture.imageID AS imageID,
               	informationarchitecture.linkToInformationarchitectureID AS linkToInformationarchitectureID,
               	informationarchitecture.linkToItemID AS linkToItemID
             FROM informationarchitecture
             LEFT JOIN container ON (container.ID = informationarchitecture.containerID)
             LEFT JOIN item ON (item.ID = informationarchitecture.itemID)
+            LEFT JOIN image ON (image.ID = informationarchitecture.imageID)
             WHERE informationarchitecture.projectID = :pProjectID
-                AND (item.ID IS NOT NULL OR container.name IS NOT NULL)
-                AND informationarchitecture.sectionID IN (SELECT projectmapsection.sectionID FROM projectmapsection WHERE projectmapsection.projectID = :pProjectID)
+                AND (item.ID IS NOT NULL OR container.name IS NOT NULL OR image.name IS NOT NULL)
+                AND (
+                    informationarchitecture.sectionID IN (SELECT projectmapsection.sectionID FROM projectmapsection WHERE projectmapsection.projectID = :pProjectID)
+                    OR informationarchitecture.flag = "root"
+                )
             ORDER BY informationarchitecture.LFT, informationarchitecture.sectionID',
 
         'selectNestedSetForExportByProjectID' => '
@@ -261,7 +292,9 @@ class Informationarchitecture extends \Recapo\Model\Model
 
                 section.shortcut,
                 item.flag AS itemFlag,
-                IF(informationarchitecture.flag = "container", container.name, item.name) AS name,
+                IF(informationarchitecture.flag = "container", container.name,
+                    IF(informationarchitecture.flag = "image", image.name, item.name)
+                ) AS name,
                 informationarchitecture.ID AS informationarchitectureID,
                 informationarchitecture.linkToInformationarchitectureID,
 
@@ -272,10 +305,11 @@ class Informationarchitecture extends \Recapo\Model\Model
             FROM informationarchitecture
             LEFT JOIN container ON (container.ID = informationarchitecture.containerID)
             LEFT JOIN item ON (item.ID = informationarchitecture.itemID)
+            LEFT JOIN image ON (image.ID = informationarchitecture.imageID)
             LEFT JOIN item AS duplicateItem ON (duplicateItem.projectID = :pProjectID AND LOWER(duplicateItem.name) = LOWER(item.name) AND duplicateItem.flag != "root" AND duplicateItem.ID != item.ID)
             LEFT JOIN section ON (section.ID = informationarchitecture.sectionID)
             WHERE informationarchitecture.projectID = :pProjectID AND informationarchitecture.flag != "root"
-               AND (item.ID IS NOT NULL OR container.name IS NOT NULL)
+               AND (item.ID IS NOT NULL OR container.name IS NOT NULL OR image.name IS NOT NULL)
             ORDER BY informationarchitecture.LFT, informationarchitecture.sectionID',
 
         'selectNestedSetForExtendedExportByProjectID' => '
@@ -283,22 +317,30 @@ class Informationarchitecture extends \Recapo\Model\Model
                 informationarchitecture.RGT,
                 informationarchitecture.LFT,
             CONCAT(
-              	IF(informationarchitecture.flag = "container", container.ID, item.ID),
+                IF(informationarchitecture.flag = "container", container.ID,
+                    IF(informationarchitecture.flag = "image", image.ID, item.ID)
+                ),
                 ":",
-              	section.shortcut,
-              	IF(informationarchitecture.flag = "container", "c(", ""),
-              	IF(informationarchitecture.flag = "container", container.name, item.name),
-              	IF(informationarchitecture.flag = "container", ")", "")
+                section.shortcut,
+                IF(informationarchitecture.flag = "container", "c(",
+                    IF(informationarchitecture.flag = "image", "img(", "")
+                ),
+                IF(informationarchitecture.flag = "container", container.name,
+                    IF(informationarchitecture.flag = "image", image.name, item.name)
+                ),
+                IF(informationarchitecture.flag = "container" OR informationarchitecture.flag = "image", ")", "")
             ) AS
             title,
                 informationarchitecture.flag AS flag,
-                informationarchitecture.containerID AS containerID
+                informationarchitecture.containerID AS containerID,
+                informationarchitecture.imageID AS imageID
             FROM informationarchitecture
             LEFT JOIN container ON (container.ID = informationarchitecture.containerID)
             LEFT JOIN item ON (item.ID = informationarchitecture.itemID)
+            LEFT JOIN image ON (image.ID = informationarchitecture.imageID)
             LEFT JOIN section ON (section.ID = informationarchitecture.sectionID)
             WHERE informationarchitecture.projectID = :pProjectID AND informationarchitecture.flag != "root"
-                AND (item.ID IS NOT NULL OR container.name IS NOT NULL)
+                AND (item.ID IS NOT NULL OR container.name IS NOT NULL OR image.name IS NOT NULL)
             ORDER BY informationarchitecture.LFT, informationarchitecture.sectionID',
     );
 
@@ -307,13 +349,19 @@ class Informationarchitecture extends \Recapo\Model\Model
         if ($pFlag == 'container') {
             $pItemID = 0;
             $pContainerID = $pID;
+            $pImageID = 0;
+        } elseif ($pFlag == 'image') {
+            $pItemID = 0;
+            $pContainerID = 0;
+            $pImageID = $pID;
         } else {
             $pItemID = $pID;
             $pContainerID = 0;
+            $pImageID = 0;
         }
         self::__insertOne('prepareInsertItemByLFT', array('pLFT' => $pLFT, 'pProjectID' => $pProjectID));
 
-        return self::__insertOne(__FUNCTION__, array('pLFT' => $pLFT, 'pRGT' => ($pLFT+1), 'pProjectID' => $pProjectID, 'pItemID' => $pItemID, 'pContainerID' => $pContainerID, 'pSectionID' => $pSectionID, 'pFlag' => $pFlag));
+        return self::__insertOne(__FUNCTION__, array('pLFT' => $pLFT, 'pRGT' => ($pLFT+1), 'pProjectID' => $pProjectID, 'pItemID' => $pItemID, 'pContainerID' => $pContainerID, 'pImageID' => $pImageID, 'pSectionID' => $pSectionID, 'pFlag' => $pFlag));
     }
 
     public static function insertItemByParentID($pParentID, $pProjectID, $pID, $pSectionID, $pFlag)
@@ -321,13 +369,19 @@ class Informationarchitecture extends \Recapo\Model\Model
         if ($pFlag == 'container') {
             $pItemID = 0;
             $pContainerID = $pID;
+            $pImageID = 0;
+        } elseif ($pFlag == 'image') {
+          $pItemID = 0;
+          $pContainerID = 0;
+          $pImageID = $pID;
         } else {
             $pItemID = $pID;
             $pContainerID = 0;
+          $pImageID = 0;
         }
         self::__insertOne('prepareInsertItemByParentID', array('pParentID' => $pParentID, 'pProjectID' => $pProjectID));
 
-        return self::__insertOne(__FUNCTION__, array('pParentID' => $pParentID, 'pProjectID' => $pProjectID, 'pItemID' => $pItemID, 'pContainerID' => $pContainerID, 'pSectionID' => $pSectionID, 'pFlag' => $pFlag));
+        return self::__insertOne(__FUNCTION__, array('pParentID' => $pParentID, 'pProjectID' => $pProjectID, 'pItemID' => $pItemID,  'pContainerID' => $pContainerID, 'pImageID' => $pImageID, 'pSectionID' => $pSectionID, 'pFlag' => $pFlag));
     }
 
     public static function deleteInformationarchitectureByProjectID($pProjectID)
@@ -340,12 +394,18 @@ class Informationarchitecture extends \Recapo\Model\Model
         if ($pFlag == 'container') {
             $pItemID = 0;
             $pContainerID = $pID;
+            $pImageID = 0;
+        } elseif ($pFlag == 'image') {
+            $pItemID = 0;
+            $pContainerID = 0;
+            $pImageID = $pID;
         } else {
             $pItemID = $pID;
             $pContainerID = 0;
+            $pImageID = 0;
         }
 
-        return self::__insertOne(__FUNCTION__, array('LFT' => $pLFT, 'RGT' => $pRGT, 'pProjectID' => $pProjectID, 'pItemID' => $pItemID, 'pContainerID' => $pContainerID, 'pSectionID' => $pSectionID, 'pFlag' => $pFlag));
+        return self::__insertOne(__FUNCTION__, array('LFT' => $pLFT, 'RGT' => $pRGT, 'pProjectID' => $pProjectID, 'pItemID' => $pItemID, 'pContainerID' => $pContainerID, 'pImageID' => $pImageID, 'pSectionID' => $pSectionID, 'pFlag' => $pFlag));
     }
 
     public static function insertRootItemByProjectID($pProjectID, $pID, $pFlag)

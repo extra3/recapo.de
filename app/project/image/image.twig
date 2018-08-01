@@ -1,0 +1,203 @@
+{% include 'project/hooter/header.twig' %}
+
+<div class="tab-pane" id="import">
+  <div class="panel panel-default">
+    <!-- Default panel contents -->
+    <div class="panel-heading"><h2><span class="glyphicon glyphicon-picture"></span> Grafiken</h2></div>
+    <div class="panel-body">
+
+      <div class="row">
+
+        <div class="col-md-12">
+          <table class="dataTable table table-striped" cellspacing="0" width="100%">
+            <thead>
+            <tr>
+              <th>ID</th>
+              <th>Bezeichnung</th>
+              <th>Beschriftung</th>
+              <th>Größe</th>
+              <th>Ausrichtung</th>
+              <th>Aktion</th>
+            </tr>
+            </thead>
+            <tfoot>
+            <tr>
+              <th>ID</th>
+              <th>Bezeichnung</th>
+              <th>Beschriftung</th>
+              <th>Größe</th>
+              <th>Ausrichtung</th>
+              <th>Aktion</th>
+            </tr>
+            </tfoot>
+
+            <tbody>
+
+            {% if images is empty %}
+              <tr>
+                <td colspan="6">
+                  Laden Sie Bilder hoch.
+                </td>
+              </tr>
+            {% endif %}
+
+            {% for item in images %}
+              <tr>
+                <td>
+                  {{item.ID}}
+                </td>
+                <td>
+                  <a href="#" class="editable" data-type="text" data-pk="{{item.ID}}" data-name="name" data-value="{{item.name}}" data-url="{{urlFor('/project/image/update', {ID:project.userID, ITEMID:item.ID})}}" data-title="Bezeichnung">{{item.name}} <small><i class="glyphicon glyphicon-pencil"></i></small></a>
+                </td>
+                <td>
+                  <a href="#" class="editable" data-type="textarea" data-pk="{{item.ID}}" data-name="caption" data-value="{{item.caption}}" data-url="{{urlFor('/project/image/update', {ID:project.userID, ITEMID:item.ID})}}" data-title="Beschriftung">{{item.caption}} <small><i class="glyphicon glyphicon-pencil"></i></small></a>
+                </td>
+                <td>
+                  <a href="#" class="editable selectTargetWidth" data-type="select" data-pk="{{item.ID}}" data-name="targetWidth" data-value="{{item.targetWidth}}" data-url="{{urlFor('/project/image/update', {ID:project.userID, ITEMID:item.ID})}}" data-title="Größe">{{item.targetWidth}}  <small><i class="glyphicon glyphicon-pencil"></i></small></a>
+                </td>
+                <td>
+                  <a href="#" class="editable selectHorizontalAlign" data-type="select" data-pk="{{item.ID}}" data-name="horizontalAlign" data-value="{{item.horizontalAlign}}" data-url="{{urlFor('/project/image/update', {ID:project.userID, ITEMID:item.ID})}}" data-title="Ausrichtung">{%if item.horizontalAlign=='left'%}links{%elseif item.horizontalAlign=='right'%}rechts{%else%}unbekannt{%endif%}  <small><i class="glyphicon glyphicon-pencil"></i></small></a>
+                </td>
+                <td>
+                  <div class="btn-group btn-group-justified btn-group-justified-custom">
+                    {% if item.sha1 == 'dummy' %}
+                      <a href="{{urlFor('/')}}img/{{ item.sha1 }}.{{ item.extension }}" class="btn btn-default"><span class="glyphicon glyphicon-picture"></span></a>
+                    {% else %}
+                      <a href="{{urlFor('/')}}userimages/{{ project.userID }}/{{ project.ID }}/{{ item.sha1 }}.{{ item.extension }}" class="btn btn-default"><span class="glyphicon glyphicon-picture"></span></a>
+                    {% endif %}
+                    <a href="{{urlFor('/project/informationarchitecture', {ID:project.ID})}}" class="btn btn-default"><span class="glyphicon glyphicon-link"></span></a>
+                    <a href="{{urlFor('/project/image/delete', {ID:project.userID, ITEMID:item.ID})}}" class="btn btn-default" {#data-toggle="modal" data-target=".modalTemplate"#}><span class="glyphicon glyphicon-trash"></span></a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+            </tbody>
+
+          </table>
+        </div>
+      </div>
+
+      <br/>
+
+      <div class="row">
+        <div class="col-md-12">
+
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <div class="ajaxForm row" id="image">
+                <form class="form-inline" role="form" action="{{urlFor('/project/image/upload', {ID:project.ID})}}" method="post" enctype="multipart/form-data">
+
+                  <div class="col-md-12">
+                    <h4><span class="glyphicon glyphicon-upload"></span> Upload <small>Neue Grafik hochladen</small></h4>
+                  </div>
+                  <div class="col-md-6 col-lg-5">
+                    <input class="form-control" type="file" id="file" name="file">
+                  </div>
+                  <div class="col-md-3">
+                    <button type="submit" class="btn btn-default btn-block">Upload</button>
+                  </div>
+                  <div class="col-md-3 col-lg-4">
+                    <div class="progress" style="margin-top: 7px;">
+                      <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%; font-size: 80%;"></div>
+                    </div>
+                  </div>
+                  {% if imagickAvailable %}
+                    <div class="col-md-12">
+                      <input type="checkbox" name="blurCheckbox">
+                      <label for="blurCheckbox">Grafik verschwommen darstellen ("gaussian blur")</label>
+                      <br/>
+                      <input type="checkbox" name="grayCheckbox">
+                      <label for="grayCheckbox">Grafik in Graustufen konvertieren</label>
+                    </div>
+                  {% endif %}
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-12">
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <h4>Beispielgrafiken zum Download:</h4>
+              <a href="{{urlFor('/')}}img/ionicons/mail.png">mail</a>,
+              <a href="{{urlFor('/')}}img/ionicons/whatsapp.png">whatsapp</a>,
+              <a href="{{urlFor('/')}}img/ionicons/twitter.png">twitter</a>,
+              <a href="{{urlFor('/')}}img/ionicons/facebook.png">facebook</a>,
+              <a href="{{urlFor('/')}}img/ionicons/youtube.png">youtube</a>,
+              <a href="{{urlFor('/')}}img/ionicons/instagram.png">instagram</a>,
+              <a href="{{urlFor('/')}}img/ionicons/heart.png">heart</a>,
+              <a href="{{urlFor('/')}}img/ionicons/aperture.png">aperture</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+
+  <div class="panel panel-default">
+    <div class="panel-heading"><h2><span class="glyphicon glyphicon-home"></span> Banner</h2></div>
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-12">
+          Diese Grafik erscheint in der Header-Sektion (falls aktiviert) und verlinkt immer zur Startseite des Experiments.
+          <br/>
+          <br/>
+          {%if project['bannerFile'] != NULL%}
+            <img src="/userbanner/{{project['bannerFile']}}" class="thumbnail" width="100%">
+            <a href="{{urlFor('/project/image/deletebanner', {ID:project.ID})}}" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span> Löschen</a>
+            <br/>
+            <br/>
+          {%endif%}
+
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <div class="ajaxForm row" id="banner">
+                <form class="form-inline" role="form" action="{{urlFor('/project/image/uploadbanner', {ID:project.ID})}}" method="post" enctype="multipart/form-data">
+                  <div class="col-md-12">
+                    <h4><span class="glyphicon glyphicon-upload"></span> Upload<small> Neues Banner hochladen</small></h4>
+                  </div>
+                  <div class="col-md-6 col-lg-5">
+                    <input class="form-control" type="file" id="file" name="file">
+                  </div>
+                  <div class="col-md-3">
+                    <button type="submit" class="btn btn-default btn-block">Upload</button>
+                  </div>
+                  <div class="col-md-3 col-lg-4">
+                    <div class="progress" style="margin-top: 7px;">
+                      <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 0%; font-size: 80%;"></div>
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    Das Logo sollte 1200px breit und ungefähr 100px hoch sein.
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+{% include 'hooter/modal.twig' %}
+
+  <script type="text/javascript">
+    var REQUIREJS = "{{urlFor('/js/project/image/image')}}";
+    var items = [
+      {% for item in items %}
+      {value: {{item.ID}}, text: "{{item.name}}"},
+      {% endfor %}
+    ];
+  </script>
+
+{% include 'project/hooter/footer.twig' %}

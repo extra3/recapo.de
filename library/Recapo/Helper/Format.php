@@ -60,6 +60,7 @@ class Format
                 // recurisve
                 self::intendtionChildren($pItems[$j]['children'], $pResultArray, $pLevelV, $pLevelH);
             }
+            $pLevelH--;
         }
     }
 
